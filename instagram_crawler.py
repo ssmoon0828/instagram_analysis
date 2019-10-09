@@ -7,20 +7,11 @@ import matplotlib.pyplot as plt
 import time
 
 # crawling module
-import requests
-from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
-#%% crawling
+#%% def function
 
-# 
-# set driver
-driver = webdriver.Chrome('C:/Users/a/Desktop/chromedriver.exe')
-driver.get('https://www.instagram.com/accounts/login/?source=auth_switcher')
-driver.implicitly_wait(5)
-
-# login
 def instagram_login():
     '''
     ID랑 PW를 입력받아 인스타그램에 로그인 할 수 있게 해준다.
@@ -36,10 +27,6 @@ def instagram_login():
     except:
         None
 
-time.sleep(1)
-instagram_login()
-
-# find post about hashtag
 def find_posts(hashtag):
     '''
     해시태그를 문자열로 입력받아 해시태그에 대응하는 게시물을 보여준다.
@@ -47,99 +34,118 @@ def find_posts(hashtag):
     url = 'https://www.instagram.com/explore/tags/' + hashtag + '/'
     driver.get(url)
 
-find_posts('맛집스타그램')
-
-num_post = driver.find_element_by_class_name('g47SY').text
-
-post_list = driver.find_elements_by_class_name('_9AhH0')
-post_list = driver.find_elements_by_tag_name('a')
-post_list[9].click()
-
-# 게시물 클릭 후 뒤로가기
-for i in range(len(post_list)):
-    post_list[i].click()
-    time.sleep(1)
-    driver.back()
-
-# 스크롤 내리기
-for i in range(1):
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+def get_urls(max_num_urls = 100000):
+    '''
+    해시태그에 대응하는 게시물들의 url 정보들을 가져와 list 형태로 반환한다.
+    '''
+    body = driver.find_element_by_tag_name("body")
+    body.send_keys(Keys.PAGE_DOWN)
+    body.send_keys(Keys.PAGE_DOWN)  
+    
+    url_list = []
+    
+    while len(url_list) <= max_num_urls :
+        
+        for i in range(1, 9):
+            post_line = driver.find_element_by_xpath('//*[@id="react-root"]/section/main/article/div[2]/div/div[' + str(i) + ']')
+            a_tag_list = post_line.find_elements_by_tag_name('a')
+            
+            for i in range(3):
+                url = a_tag_list[i].get_attribute('href')
+                
+                if url not in url_list:
+                    url_list.append(url)
+                else:
+                    pass
+            
+        body.send_keys(Keys.PAGE_DOWN)
+        body.send_keys(Keys.PAGE_DOWN)
+        time.sleep(1)
+    
+    return url_list
 
 def get_loc():
     '''
-    게시물에 입력된 주소를 반환한다.
-    주소가 입력되어있지 않을 때는 None값을 반환한다.
-    '''       
-    loc_class = driver.find_element_by_class_name('JF9hh')
+    게시물의 장소 정보를 반환한다.
+    '''
     try:
-        loc_name = loc_class.find_element_by_tag_name('a')
-        print(loc_name.text)
+        loc = driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/div/article/header/div[2]/div[2]/div[2]/a').text
+        
+        return loc
     except:
-        print('None')
-
-get_loc()
-
-def get_comments():
-    '''
-    게시물에 달린 댓글들을 추출한다.
-    답글달기로 숨겨진 댓글들도 뽑아내야한다(미완)
-    '''
-    doc_class = driver.find_elements_by_class_name('C4VMK')
-    for i in range(len(doc_class)):
-        doc_write = doc_class[i].find_element_by_tag_name('span')
-        print(doc_write.text)
-
-get_comments()
+        
+        return ''
 
 def get_likes():
     '''
-    게시물의 좋아요 수를 추출한다.
+    게시물의 좋아요 수를 반환한다.
     '''
-    like_str = driver.find_element_by_class_name('Nm9Fw')
-    like_num = like_str.find_element_by_tag_name('span').text
-    print(like_num)
+    try:
+        likes = driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/div/article/div[2]/section[2]/div/div/button/span').text
+        
+        return int(likes)
+    except:
+        
+        return 0
+    
+def get_comments():
+    '''
+    게시물의 코멘트들을 반환한다.
+    해시태그와 해시태그가 아닌 커멘트들을 분리할 필요가 있을까?
+    분리할 필요가 있다면 span 태그가 아닌 원본을 뽑아 정제해야 할 듯
+    '''
+    comments_class = driver.find_elements_by_class_name('C4VMK')
+    comments = ''
+    for i in range(len(comments_class)):
+        comment =  comments_class[i].find_element_by_tag_name('span').text
+        comments += comment + ' ' 
+    
+    return comments
 
-get_likes()
+def make_df(url_list):
+    '''
+    url list를 받아 url에 대응하는 위치, 좋아요 수, 코멘트에 관한 정보를
+    데이터프레임 형태로 만들어준다.
+    '''
+    
+    loc_list = []
+    likes_list = []
+    comments_list = []
+    
+    for url in url_list:
+        driver.get(url)
+        
+        # 위치 리스트 생성
+        loc = get_loc()
+        loc_list.append(loc)
+        
+        # 좋아요 수 리스트 생성
+        likes = get_likes()
+        likes_list.append(likes)
+        
+        # 코멘트 리스트 생성
+        comments = get_comments()
+        comments_list.append(comments)
+    
+    df = pd.DataFrame({'loc' : loc_list,
+                       'like' : likes_list,
+                       'comments' : comments_list})
+    
+    return df
 
-body = driver.find_element_by_tag_name("body")
-page_down = 1
-while page_down <= 20:
-    body.send_keys(Keys.PAGE_DOWN)
-    time.sleep(1)
+#%% crawling
 
-driver.find_elements_by_class_name('v1Nh3 kIKUG  _bz0w')
-a = driver.find_elements_by_xpath('//*[@id="react-root"]/section/main/article/div[1]/div/div/div[3]/div[2]/a')
-#_9AhH0
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[1]/a/div/div[2]
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[2]/a/div/div[2]
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[3]/a/div/div[2]
+driver = webdriver.Chrome('C:/Users/ssmoo/Desktop/chromedriver.exe')
+driver.implicitly_wait(5)
+driver.get('https://www.instagram.com/accounts/login/?source=auth_switcher')
+time.sleep(1)
+instagram_login()
+time.sleep(2)
+find_posts('맛집스타그램')
+time.sleep(1)
+url_list = get_urls(100)
+sub_url_list = url_list[:10]
+df = make_df(sub_url_list)
 
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[2]/div[1]/a/div[1]/div[2]
-
-//*[@id="react-root"]/section/main/article/div[2]/div/div[1]/div[1]/a/div[1]/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[1]/div[2]/a/div/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[1]/div[3]/a/div[1]/div[2]
-
-//*[@id="react-root"]/section/main/article/div[2]/div/div[2]/div[1]/a/div[1]/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[2]/div[2]/a/div/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[2]/div[3]/a/div/div[2]
-
-//*[@id="react-root"]/section/main/article/div[2]/div/div[3]/div[1]/a/div[1]/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[3]/div[2]/a/div[1]/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[3]/div[3]/a/div[1]/div[2]
-
-//*[@id="react-root"]/section/main/article/div[2]/div/div[11]/div[1]/a/div/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[11]/div[2]/a/div/div[2]
-//*[@id="react-root"]/section/main/article/div[2]/div/div[11]/div[3]/a/div[1]/div[2]
-
-#
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[1]/a
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[2]/a
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[3]/a
-
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[2]/div[1]/a
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[2]/div[2]/a
-//*[@id="react-root"]/section/main/article/div[1]/div/div/div[2]/div[3]/a
-driver.find
-a = driver.find_element_by_xpath('//*[@id="react-root"]/section/main/article/div[1]/div/div/div[1]/div[1]/a')
-a.find_element_by_tag_name('a')
+# try except 구문을 써서 좋아요 수와 위치정보에서 결측값이 있는 오류를 해결했지만
+# 속도가 너무 느려졌다...해결할 방법 없을까?
