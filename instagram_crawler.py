@@ -45,8 +45,11 @@ def get_urls(max_num_posts = 100000):
         max_num_posts = num_post
 
     body = driver.find_element_by_tag_name("body")
-    body.send_keys(Keys.PAGE_DOWN)
-    body.send_keys(Keys.PAGE_DOWN)  
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     
     url_list = []
     
@@ -75,6 +78,12 @@ def get_urls(max_num_posts = 100000):
         time.sleep(1)
     
     return url_list
+
+def get_date():
+    time_tag = driver.find_element_by_tag_name('time')
+    date = time_tag.get_attribute('datetime')[:10]
+    
+    return date
 
 def get_loc():
     '''
@@ -120,28 +129,34 @@ def make_df(url_list):
     데이터프레임 형태로 만들어준다.
     '''
     
-    loc_list = []
-    likes_list = []
+    date_list = []
+    #loc_list = []
+    #likes_list = []
     comments_list = []
     
     for url in url_list:
         driver.get(url)
         
-        # 위치 리스트 생성
-        loc = get_loc()
-        loc_list.append(loc)
+        # 날짜 리스트 생성
+        date = get_date()
+        date_list.append(date)
         
-        # 좋아요 수 리스트 생성
-        likes = get_likes()
-        likes_list.append(likes)
+        # 위치 리스트 생성 (시간이 오래걸려 뺌)
+        #loc = get_loc()
+        #loc_list.append(loc)
+        
+        # 좋아요 수 리스트 생성 (시간이 오래걸릴 뿐더러 분석에 불필요하다고 판단하여 뺌)
+        #likes = get_likes()
+        #likes_list.append(likes)
         
         # 코멘트 리스트 생성
         comments = get_comments()
         comments_list.append(comments)
     
     df = pd.DataFrame({'url' : url_list,
-                       'loc' : loc_list,
-                       'like' : likes_list,
+                       'date' : pd.to_datetime(date_list),
+                       #'loc' : loc_list,
+                       #'like' : likes_list,
                        'comments' : comments_list})
     
     return df
@@ -149,19 +164,24 @@ def make_df(url_list):
 #%% crawling
     # url 변수 추가 필요(merge 시킬때 필요)
 
-driver = webdriver.Chrome('C:/Users/ssmoo/Desktop/chromedriver.exe')
+driver = webdriver.Chrome('C:/Users/a/Desktop/chromedriver.exe')
 driver.implicitly_wait(5)
 driver.get('https://www.instagram.com/accounts/login/?source=auth_switcher')
 time.sleep(1)
+
 instagram_login()
 time.sleep(2)
+
 find_posts('맛집스타그램')
 time.sleep(1)
-url_list = get_urls(100)
-start_time = time.time()
-df = make_df(url_list)
-end_time = time.time()
-print('learning time : ', end_time - start_time)
-# try except 구문을 써서 좋아요 수와 위치정보에서 결측값이 있는 오류를 해결했지만
-# 속도가 너무 느려졌다...해결할 방법 없을까?
 
+start_url_search_time = time.time()
+url_list = get_urls(100)
+end_url_search_time = time.time()
+
+start_make_df_time = time.time()
+df = make_df(url_list)
+end_make_df_time = time.time()
+
+print('url search time : ', end_url_search_time - start_url_search_time)
+print('make df time : ', end_make_df_time - start_make_df_time)
