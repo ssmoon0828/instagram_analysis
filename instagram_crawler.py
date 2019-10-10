@@ -76,8 +76,10 @@ def get_urls(max_num_posts = 100000):
                         url_list.append(url)
                     else:
                         pass
-            
+                    
+        body.send_keys(Keys.PAGE_DOWN)            
         body.send_keys(Keys.PAGE_DOWN)
+        body.send_keys(Keys.PAGE_UP)
         body.send_keys(Keys.PAGE_DOWN)
         time.sleep(1)
     
@@ -140,7 +142,8 @@ def get_comments():
             comment =  comments_class[i].find_element_by_tag_name('span').text
             comments += comment + ' ' 
         
-        return comments        
+        return comments
+
 
 def get_hashtag(text):
     '''
@@ -165,27 +168,32 @@ def make_df(url_list):
     hashtag_list_list = []
     
     for url in url_list:
-        driver.get(url)
         
-        # 날짜 리스트 생성
-        date = get_date()
-        date_list.append(date)
+        try:
+            driver.get(url)
+            
+            # 날짜 리스트 생성
+            date = get_date()
+            date_list.append(date)
+            
+            # 위치 리스트 생성 (시간이 오래걸려 뺌)
+            #loc = get_loc()
+            #loc_list.append(loc)
+            
+            # 좋아요 수 리스트 생성 (시간이 오래걸릴 뿐더러 분석에 불필요하다고 판단하여 뺌)
+            #likes = get_likes()
+            #likes_list.append(likes)
+            
+            # 코멘트 리스트 생성
+            comments = get_comments()
+            comments_list.append(comments)
+            
+            # 해시태그 리스트 생성
+            hashtag_list = get_hashtag(comments)
+            hashtag_list_list.append(hashtag_list)
         
-        # 위치 리스트 생성 (시간이 오래걸려 뺌)
-        #loc = get_loc()
-        #loc_list.append(loc)
-        
-        # 좋아요 수 리스트 생성 (시간이 오래걸릴 뿐더러 분석에 불필요하다고 판단하여 뺌)
-        #likes = get_likes()
-        #likes_list.append(likes)
-        
-        # 코멘트 리스트 생성
-        comments = get_comments()
-        comments_list.append(comments)
-        
-        # 해시태그 리스트 생성
-        hashtag_list = get_hashtag(comments)
-        hashtag_list_list.append(hashtag_list)
+        except:
+            pass
         
     df = pd.DataFrame({'url' : url_list,
                        'date' : pd.to_datetime(date_list),
@@ -202,10 +210,10 @@ def make_df(url_list):
 
 # set parameter
 chrome_driver_path = 'C:/Users/a/Desktop/chromedriver.exe' # 크롬 드라이버 위치
-hashtag_list = ['먹부림', '맛스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
+hashtag_list = ['먹스타그램', '맛스타그램', '맛집', '먹스타', '맛있다그램', '먹부림', '푸드스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
 ID = 'ssmoooooon' # ID
-PW = '**********' # PW (github에 올릴때 반드시 가리고 올릴것!!)
-num_post = 50 # 추출하고 싶은 게시물의 수
+PW = 'dmslive73!!' # PW (github에 올릴때 반드시 가리고 올릴것!!)
+num_post = 1000 # 추출하고 싶은 게시물의 수
 
 # crawling start!
 
@@ -215,11 +223,11 @@ for hashtag in hashtag_list:
     driver = webdriver.Chrome(chrome_driver_path)
     driver.get('https://www.instagram.com/accounts/login/?source=auth_switcher')
     driver.implicitly_wait(1)
-    time.sleep(1)
+    time.sleep(2)
     
     # 로그인
-    instagram_login(ID, PW)
-    time.sleep(2)
+    # instagram_login(ID, PW)
+    # time.sleep(2)
     
     # 해시태그 검색
     find_posts(hashtag)
