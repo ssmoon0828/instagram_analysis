@@ -13,12 +13,10 @@ from selenium.webdriver.common.keys import Keys
 
 #%% def function
 
-def instagram_login():
+def instagram_login(ID, PW):
     '''
     ID랑 PW를 입력받아 인스타그램에 로그인 할 수 있게 해준다.
     '''
-    ID = input('ID : ')
-    PW = input('PW : ')
     driver.find_element_by_name('username').send_keys(ID)
     driver.find_element_by_name('password').send_keys(PW)
     driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/article/div/div[1]/div/form/div[4]').click()
@@ -95,13 +93,14 @@ def get_loc():
     '''
     게시물의 장소 정보를 반환한다.
     '''
-    try:
-        loc = driver.find_element_by_xpath('//*[@id="react-root"]/section/main/div/div/article/header/div[2]/div[2]/div[2]/a').text
-        
-        return loc
-    except:
+    loc_list = driver.find_elements_by_xpath('//*[@id="react-root"]/section/main/div/div/article/header/div[2]/div[2]/div[2]/a').text
+    
+    if len(loc_list) == 0:
         
         return ''
+    else:
+        
+        return
 
 def get_likes():
     '''
@@ -118,18 +117,35 @@ def get_likes():
 def get_comments():
     '''
     게시물의 코멘트들을 반환한다.
-    해시태그와 해시태그가 아닌 커멘트들을 분리할 필요가 있을까?
-    분리할 필요가 있다면 span 태그가 아닌 원본을 뽑아 정제해야 할 듯
     '''
-    comments_class = driver.find_elements_by_class_name('C4VMK')
-    comments = ''
-    for i in range(len(comments_class)):
-        comment =  comments_class[i].find_element_by_tag_name('span').text
-        comments += comment + ' ' 
+    replies = driver.find_elements_by_class_name('EizgU')
     
-    return comments
+    if len(replies) == 0:
+        comments_class = driver.find_elements_by_class_name('C4VMK')
+        comments = ''
+
+        for i in range(len(comments_class)):
+            comment =  comments_class[i].find_element_by_tag_name('span').text
+            comments += comment + ' ' 
+        
+        return comments
+    else:
+        for i in range(len(replies)):
+            replies[i].click()
+
+        comments_class = driver.find_elements_by_class_name('C4VMK')
+        comments = ''
+
+        for i in range(len(comments_class)):
+            comment =  comments_class[i].find_element_by_tag_name('span').text
+            comments += comment + ' ' 
+        
+        return comments        
 
 def get_hashtag(text):
+    '''
+    게시물에서 반환받은 코멘트로부터 해시태그들을 추출하여 리스트로 반환한다.
+    '''
     hashtag_regex = "#([0-9a-zA-Z가-힣]*)"
     hashtag_compile = re.compile(hashtag_regex)
     hashtag_list = hashtag_compile.findall(text)
@@ -180,28 +196,51 @@ def make_df(url_list):
     
     return df
 
+def crawling(hashtag_list):
+    '''
+    해시태그 리스트를 입력받아 그에 대응하는 게시물들을 크롤링 해준다.
+    크롤링 데이터는 현재 디렉토리에 저장된다.
+    '''  
+    for hashtag in hashtag_list:
+    
+        # 드라이버 생성
+        driver = webdriver.Chrome(chrome_driver_path)
+        driver.get('https://www.instagram.com/accounts/login/?source=auth_switcher')
+        driver.implicitly_wait(1)
+        time.sleep(1)
+        
+        # 로그인
+        instagram_login(ID, PW)
+        time.sleep(2)
+        
+        # 해시태그 검색
+        find_posts(hashtag)
+        time.sleep(1)
+        
+        start_url_search_time = time.time()
+        url_list = get_urls(num_post)
+        end_url_search_time = time.time()
+        
+        start_make_df_time = time.time()
+        df = make_df(url_list)
+        end_make_df_time = time.time()
+        
+        print('[' + hashtag + ']')
+        print('url search time : ', end_url_search_time - start_url_search_time)
+        print('make df time : ', end_make_df_time - start_make_df_time)
+        print()
+        
+        df.to_csv(hashtag + '.csv', index = False)
+        driver.close()
+ 
 #%% crawling
-    # url 변수 추가 필요(merge 시킬때 필요)
 
-driver = webdriver.Chrome('C:/Users/a/Desktop/chromedriver.exe')
-driver.implicitly_wait(5)
-driver.get('https://www.instagram.com/accounts/login/?source=auth_switcher')
-time.sleep(1)
+# set parameter
+chrome_driver_path = 'C:/Users/a/Desktop/chromedriver.exe' # 크롬 드라이버 위치
+hashtag_list = ['먹부림'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
+ID = 'ssmoooooon' # ID
+PW = '**********' # PW (github에 올릴때 반드시 가리고 올릴것!!)
+num_post = 500 # 추출하고 싶은 게시물의 수
 
-instagram_login()
-time.sleep(2)
-
-find_posts('맛집스타그램')
-time.sleep(1)
-
-start_url_search_time = time.time()
-url_list = get_urls(100)
-end_url_search_time = time.time()
-
-start_make_df_time = time.time()
-df = make_df(url_list)
-end_make_df_time = time.time()
-
-print('url search time : ', end_url_search_time - start_url_search_time)
-print('make df time : ', end_make_df_time - start_make_df_time)
-
+# crawling start!
+crawling(hashtag_list)
