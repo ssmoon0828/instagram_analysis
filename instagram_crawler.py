@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
+import re
 
 # crawling module
 from selenium import webdriver
@@ -45,6 +46,11 @@ def get_urls(max_num_posts = 100000):
         max_num_posts = num_post
 
     body = driver.find_element_by_tag_name("body")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -123,6 +129,13 @@ def get_comments():
     
     return comments
 
+def get_hashtag(text):
+    hashtag_regex = "#([0-9a-zA-Z가-힣]*)"
+    hashtag_compile = re.compile(hashtag_regex)
+    hashtag_list = hashtag_compile.findall(text)
+    
+    return hashtag_list
+    
 def make_df(url_list):
     '''
     url list를 받아 url에 대응하는 위치, 좋아요 수, 코멘트에 관한 정보를
@@ -133,6 +146,7 @@ def make_df(url_list):
     #loc_list = []
     #likes_list = []
     comments_list = []
+    hashtag_list_list = []
     
     for url in url_list:
         driver.get(url)
@@ -152,12 +166,17 @@ def make_df(url_list):
         # 코멘트 리스트 생성
         comments = get_comments()
         comments_list.append(comments)
-    
+        
+        # 해시태그 리스트 생성
+        hashtag_list = get_hashtag(comments)
+        hashtag_list_list.append(hashtag_list)
+        
     df = pd.DataFrame({'url' : url_list,
                        'date' : pd.to_datetime(date_list),
                        #'loc' : loc_list,
                        #'like' : likes_list,
-                       'comments' : comments_list})
+                       'comments' : comments_list,
+                       'hashtag_list' : hashtag_list_list})
     
     return df
 
@@ -185,3 +204,4 @@ end_make_df_time = time.time()
 
 print('url search time : ', end_url_search_time - start_url_search_time)
 print('make df time : ', end_make_df_time - start_make_df_time)
+
