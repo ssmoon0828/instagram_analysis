@@ -34,17 +34,23 @@ def find_posts(hashtag):
     url = 'https://www.instagram.com/explore/tags/' + hashtag + '/'
     driver.get(url)
 
-def get_urls(max_num_urls = 100000):
+def get_urls(max_num_posts = 100000):
     '''
     해시태그에 대응하는 게시물들의 url 정보들을 가져와 list 형태로 반환한다.
     '''
+    num_post = driver.find_element_by_xpath('//*[@id="react-root"]/section/main/header/div[2]/div/div[2]/span/span').text
+    num_post = int(num_post.replace(',', ''))
+    
+    if num_post <= max_num_posts:
+        max_num_posts = num_post
+
     body = driver.find_element_by_tag_name("body")
     body.send_keys(Keys.PAGE_DOWN)
     body.send_keys(Keys.PAGE_DOWN)  
     
     url_list = []
     
-    while len(url_list) <= max_num_urls :
+    while len(url_list) <= max_num_posts :
         
         for i in range(1, 9):
             post_line = driver.find_element_by_xpath('//*[@id="react-root"]/section/main/article/div[2]/div/div[' + str(i) + ']')
@@ -53,10 +59,16 @@ def get_urls(max_num_urls = 100000):
             for i in range(3):
                 url = a_tag_list[i].get_attribute('href')
                 
-                if url not in url_list:
-                    url_list.append(url)
+                if len(url_list) < 51:
+                    if url not in url_list:
+                        url_list.append(url)
+                    else:
+                        pass
                 else:
-                    pass
+                    if url not in url_list[-50 :]:
+                        url_list.append(url)
+                    else:
+                        pass
             
         body.send_keys(Keys.PAGE_DOWN)
         body.send_keys(Keys.PAGE_DOWN)
@@ -127,13 +139,15 @@ def make_df(url_list):
         comments = get_comments()
         comments_list.append(comments)
     
-    df = pd.DataFrame({'loc' : loc_list,
+    df = pd.DataFrame({'url' : url_list,
+                       'loc' : loc_list,
                        'like' : likes_list,
                        'comments' : comments_list})
     
     return df
 
 #%% crawling
+    # url 변수 추가 필요(merge 시킬때 필요)
 
 driver = webdriver.Chrome('C:/Users/ssmoo/Desktop/chromedriver.exe')
 driver.implicitly_wait(5)
@@ -144,8 +158,10 @@ time.sleep(2)
 find_posts('맛집스타그램')
 time.sleep(1)
 url_list = get_urls(100)
-sub_url_list = url_list[:10]
-df = make_df(sub_url_list)
-
+start_time = time.time()
+df = make_df(url_list)
+end_time = time.time()
+print('learning time : ', end_time - start_time)
 # try except 구문을 써서 좋아요 수와 위치정보에서 결측값이 있는 오류를 해결했지만
 # 속도가 너무 느려졌다...해결할 방법 없을까?
+
