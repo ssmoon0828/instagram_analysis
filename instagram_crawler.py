@@ -161,9 +161,10 @@ def make_df(url_list):
     데이터프레임 형태로 만들어준다.
     '''
     
+    refined_url_list = []
     date_list = []
-    #loc_list = []
-    #likes_list = []
+    # loc_list = []
+    # likes_list = []
     comments_list = []
     hashtag_list_list = []
     
@@ -177,12 +178,12 @@ def make_df(url_list):
             date_list.append(date)
             
             # 위치 리스트 생성 (시간이 오래걸려 뺌)
-            #loc = get_loc()
-            #loc_list.append(loc)
+            # loc = get_loc()
+            # loc_list.append(loc)
             
             # 좋아요 수 리스트 생성 (시간이 오래걸릴 뿐더러 분석에 불필요하다고 판단하여 뺌)
-            #likes = get_likes()
-            #likes_list.append(likes)
+            # likes = get_likes()
+            # likes_list.append(likes)
             
             # 코멘트 리스트 생성
             comments = get_comments()
@@ -191,11 +192,14 @@ def make_df(url_list):
             # 해시태그 리스트 생성
             hashtag_list = get_hashtag(comments)
             hashtag_list_list.append(hashtag_list)
+            
+            # 삭제되지 않은 게시물의 url 리스트 생성
+            refined_url_list.append(url)
         
         except:
             pass
         
-    df = pd.DataFrame({'url' : url_list,
+    df = pd.DataFrame({'url' : refined_url_list,
                        'date' : pd.to_datetime(date_list),
                        #'loc' : loc_list,
                        #'like' : likes_list,
@@ -210,10 +214,11 @@ def make_df(url_list):
 
 # set parameter
 chrome_driver_path = 'C:/Users/a/Desktop/chromedriver.exe' # 크롬 드라이버 위치
-hashtag_list = ['먹스타그램', '맛스타그램', '맛집', '먹스타', '맛있다그램', '먹부림', '푸드스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
+#hashtag_list = ['먹스타그램', '맛스타그램', '맛집', '먹스타', '맛있다그램', '먹부림', '푸드스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
+hashtag_list = ['먹스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
 ID = 'ssmoooooon' # ID
-PW = 'dmslive73!!' # PW (github에 올릴때 반드시 가리고 올릴것!!)
-num_post = 1000 # 추출하고 싶은 게시물의 수
+PW = '**********' # PW (github에 올릴때 반드시 가리고 올릴것!!)
+num_post = 50 # 추출하고 싶은 게시물의 수
 
 # crawling start!
 
@@ -248,3 +253,7 @@ for hashtag in hashtag_list:
     
     df.to_csv(hashtag + '.csv', index = False)
     driver.close()
+
+start_make_df_time = time.time()
+df = make_df(url_list)
+end_url_search_time = time.time()
