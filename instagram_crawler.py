@@ -79,6 +79,7 @@ def get_urls(max_num_posts = 100000):
                     
         body.send_keys(Keys.PAGE_DOWN)            
         body.send_keys(Keys.PAGE_DOWN)
+        time.sleep(1)
         body.send_keys(Keys.PAGE_UP)
         body.send_keys(Keys.PAGE_DOWN)
         time.sleep(1)
@@ -201,8 +202,8 @@ def make_df(url_list):
         
     df = pd.DataFrame({'url' : refined_url_list,
                        'date' : pd.to_datetime(date_list),
-                       #'loc' : loc_list,
-                       #'like' : likes_list,
+                       # 'loc' : loc_list,
+                       # 'likes' : likes_list,
                        'comments' : comments_list,
                        'hashtag_list' : hashtag_list_list})
     
@@ -215,9 +216,9 @@ def make_df(url_list):
 # set parameter
 chrome_driver_path = 'C:/Users/a/Desktop/chromedriver.exe' # 크롬 드라이버 위치
 #hashtag_list = ['먹스타그램', '맛스타그램', '맛집', '먹스타', '맛있다그램', '먹부림', '푸드스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
-hashtag_list = ['먹스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
+hashtag_list = ['맛스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
 ID = 'ssmoooooon' # ID
-PW = '**********' # PW (github에 올릴때 반드시 가리고 올릴것!!)
+PW = 'dmslive73!!' # PW (github에 올릴때 반드시 가리고 올릴것!!)
 num_post = 50 # 추출하고 싶은 게시물의 수
 
 # crawling start!
@@ -228,11 +229,11 @@ for hashtag in hashtag_list:
     driver = webdriver.Chrome(chrome_driver_path)
     driver.get('https://www.instagram.com/accounts/login/?source=auth_switcher')
     driver.implicitly_wait(1)
-    time.sleep(2)
+    time.sleep(3)
     
     # 로그인
-    # instagram_login(ID, PW)
-    # time.sleep(2)
+    instagram_login(ID, PW)
+    time.sleep(2)
     
     # 해시태그 검색
     find_posts(hashtag)
@@ -253,7 +254,3 @@ for hashtag in hashtag_list:
     
     df.to_csv(hashtag + '.csv', index = False)
     driver.close()
-
-start_make_df_time = time.time()
-df = make_df(url_list)
-end_url_search_time = time.time()
