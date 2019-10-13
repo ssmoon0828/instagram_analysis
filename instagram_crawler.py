@@ -214,11 +214,11 @@ def make_df(url_list):
 #%% crawling
 
 # set parameter
-chrome_driver_path = 'C:/Users/a/Desktop/chromedriver.exe' # 크롬 드라이버 위치
+chrome_driver_path = 'C:/Users/ssmoo/Desktop/chromedriver.exe' # 크롬 드라이버 위치
 #hashtag_list = ['먹스타그램', '맛스타그램', '맛집', '먹스타', '맛있다그램', '먹부림', '푸드스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
-hashtag_list = ['맛스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
+hashtag_list = ['맛집스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
 ID = 'ssmoooooon' # ID
-PW = 'dmslive73!!' # PW (github에 올릴때 반드시 가리고 올릴것!!)
+PW = '**********' # PW (github에 올릴때 반드시 가리고 올릴것!!)
 num_post = 50 # 추출하고 싶은 게시물의 수
 
 # crawling start!
@@ -233,11 +233,11 @@ for hashtag in hashtag_list:
     
     # 로그인
     instagram_login(ID, PW)
-    time.sleep(2)
+    time.sleep(3)
     
     # 해시태그 검색
     find_posts(hashtag)
-    time.sleep(1)
+    time.sleep(3)
     
     start_url_search_time = time.time()
     url_list = get_urls(num_post)
