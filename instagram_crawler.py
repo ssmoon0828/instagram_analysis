@@ -192,7 +192,7 @@ def make_df(url_list):
             
             # 해시태그 리스트 생성
             hashtag_list = get_hashtag(comments)
-            str(hashtag_list).replace("'", '').replace('[', '').replace(']', '')
+            hashtag_list = str(hashtag_list).replace("'", '').replace('[', '').replace(']', '')
             hashtag_list_list.append(hashtag_list)
             
             # 삭제되지 않은 게시물의 url 리스트 생성
@@ -215,12 +215,12 @@ def make_df(url_list):
 #%% crawling
 
 # set parameter
-chrome_driver_path = 'C:/Users/ssmoo/Desktop/chromedriver.exe' # 크롬 드라이버 위치
+chrome_driver_path = 'C:/Users/a/Desktop/chromedriver.exe' # 크롬 드라이버 위치
 #hashtag_list = ['먹스타그램', '맛스타그램', '맛집', '먹스타', '맛있다그램', '먹부림', '푸드스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
 hashtag_list = ['맛집스타그램'] # 추출하고 싶은 게시물안에 속한 해시태그 리스트
 ID = 'ssmoooooon' # ID
 PW = '**********' # PW (github에 올릴때 반드시 가리고 올릴것!!)
-num_post = 50 # 추출하고 싶은 게시물의 수
+num_post = 100 # 추출하고 싶은 게시물의 수
 
 # crawling start!
 

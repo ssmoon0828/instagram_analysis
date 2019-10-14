@@ -194,7 +194,7 @@ def make_df(url_list):
             
             # 해시태그 리스트 생성
             hashtag_list = get_hashtag(comments)
-            str(hashtag_list).replace("'", '').replace('[', '').replace(']', '')
+            hashtag_list = str(hashtag_list).replace("'", '').replace('[', '').replace(']', '')
             hashtag_list_list.append(hashtag_list)
             
             # 삭제되지 않은 게시물의 url 리스트 생성
