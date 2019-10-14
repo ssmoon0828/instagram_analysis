@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import time
 import re
+from datetime import datetime
 
 # crawling module
 from selenium import webdriver
@@ -210,8 +211,6 @@ def make_df(url_list):
     
     return df
 
-
- 
 #%% crawling
 
 # set parameter
@@ -221,7 +220,8 @@ hashtag_list = ['맛집스타그램'] # 추출하고 싶은 게시물안에 속�
 ID = 'ssmoooooon' # ID
 PW = '**********' # PW (github에 올릴때 반드시 가리고 올릴것!!)
 num_post = 100 # 추출하고 싶은 게시물의 수
-
+now = datetime.now()
+save_date = '_' + str(now)[2:10].replace('-', '_')
 # crawling start!
 
 for hashtag in hashtag_list:
@@ -253,5 +253,5 @@ for hashtag in hashtag_list:
     print('make df time : ', end_make_df_time - start_make_df_time)
     print()
     
-    df.to_csv(hashtag + '.csv', index = False)
+    df.to_csv(hashtag + save_date + '.csv', index = False)
     driver.close()
